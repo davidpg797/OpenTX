@@ -1,0 +1,58 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Generated files
+pkg/proto/
+
+# Temporary files
+tmp/
+temp/
+
+# Certificates and keys (DO NOT commit real keys!)
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+!test_data/*.pem
+
+# Database
+*.db
+*.sqlite
+
+# OS
+Thumbs.db
