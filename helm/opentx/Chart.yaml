@@ -1,0 +1,17 @@
+apiVersion: v2
+name: opentx
+description: OpenTX - Canonical Transaction Protocol & Gateway
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - payments
+  - iso8583
+  - gateway
+  - fintech
+home: https://github.com/krish567366/OpenTX
+sources:
+  - https://github.com/krish567366/OpenTX
+maintainers:
+  - name: OpenTX Team
+    email: dev@opentx.io

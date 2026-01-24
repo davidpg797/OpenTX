@@ -1,0 +1,192 @@
+# Default values for opentx
+replicaCount: 3
+
+image:
+  repository: ghcr.io/krish567366/opentx
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  grpcPort: 50051
+  httpPort: 8080
+  metricsPort: 9090
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: opentx.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - opentx
+          topologyKey: kubernetes.io/hostname
+
+# Configuration
+config:
+  logLevel: info
+  environment: production
+  
+  server:
+    grpcPort: 50051
+    httpPort: 8080
+    metricsPort: 9090
+    readTimeout: 30s
+    writeTimeout: 30s
+    idleTimeout: 60s
+
+# Redis configuration
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "changeme"
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+  
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    username: opentx
+    password: "changeme"
+    database: opentx
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 250m
+
+# Kafka configuration
+kafka:
+  enabled: true
+  replicaCount: 3
+  persistence:
+    enabled: true
+    size: 10Gi
+  zookeeper:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 8Gi
+
+# Observability
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+  adminPassword: "changeme"
+
+jaeger:
+  enabled: true
+  collector:
+    service:
+      type: ClusterIP
+  query:
+    service:
+      type: ClusterIP
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Environment variables
+env:
+  - name: ENVIRONMENT
+    value: "production"
+  - name: LOG_LEVEL
+    value: "info"
+  - name: JAEGER_AGENT_HOST
+    value: "jaeger-agent"
+  - name: JAEGER_AGENT_PORT
+    value: "6831"
+
+# Secrets (use external secret manager in production)
+secrets:
+  redis:
+    password: "changeme"
+  postgresql:
+    password: "changeme"
+  kafka:
+    password: "changeme"
