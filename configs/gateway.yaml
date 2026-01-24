@@ -1,0 +1,110 @@
+gateway:
+  name: "canonical-transaction-gateway"
+  version: "1.0.0"
+  environment: "development"
+  
+  # Server configuration
+  server:
+    grpc:
+      host: "0.0.0.0"
+      port: 50051
+    http:
+      host: "0.0.0.0"
+      port: 8080
+    tcp:
+      host: "0.0.0.0"
+      port: 9000
+      
+  # Network configurations
+  networks:
+    - name: "VISA"
+      enabled: true
+      host: "visa.network.example.com"
+      port: 5000
+      timeout: 30s
+      retry_attempts: 3
+      
+    - name: "MASTERCARD"
+      enabled: true
+      host: "mc.network.example.com"
+      port: 5000
+      timeout: 30s
+      retry_attempts: 3
+      
+    - name: "NPCI"
+      enabled: true
+      host: "npci.network.example.com"
+      port: 5000
+      timeout: 30s
+      retry_attempts: 3
+  
+  # Redis configuration
+  redis:
+    url: "redis://localhost:6379/0"
+    password: ""
+    db: 0
+    max_retries: 3
+    pool_size: 10
+    ttl: 24h
+    
+  # Kafka configuration
+  kafka:
+    brokers:
+      - "localhost:9092"
+    topics:
+      events: "transaction.events"
+      dlq: "transaction.dlq"
+    consumer_group: "canonical-gateway"
+    producer:
+      compression: "snappy"
+      batch_size: 100
+      
+  # Security configuration
+  security:
+    encryption:
+      enabled: true
+      key_id: "gateway-key-001"
+      algorithm: "AES-256-GCM"
+    signing:
+      enabled: true
+      key_id: "gateway-sign-001"
+      algorithm: "RSA-PSS-SHA256"
+    replay_window: 5m
+    hsm:
+      enabled: false
+      provider: "aws-cloudhsm"
+      endpoint: ""
+      
+  # Idempotency configuration
+  idempotency:
+    enabled: true
+    ttl: 24h
+    dedup_window: 5m
+    
+  # Observability configuration
+  observability:
+    logging:
+      level: "info"
+      format: "json"
+      output: "stdout"
+    tracing:
+      enabled: true
+      otlp_endpoint: "localhost:4317"
+      sample_rate: 1.0
+    metrics:
+      enabled: true
+      prometheus_port: 9090
+      
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    requests_per_second: 1000
+    burst: 2000
+    
+  # Circuit breaker
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    success_threshold: 2
+    timeout: 30s
+    half_open_max_requests: 1
