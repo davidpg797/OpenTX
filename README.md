@@ -196,7 +196,7 @@ event := eventBuilder.BuildAuthRequestedEvent(
 publisher.Publish(ctx, event)
 ```
 
-## 📊 Observability
+## Observability
 
 ### Distributed Tracing (Jaeger)
 
