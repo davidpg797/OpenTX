@@ -1,0 +1,122 @@
+syntax = "proto3";
+
+package canonical;
+
+option go_package = "github.com/krish567366/OpenTX/pkg/proto/canonical;canonical";
+
+// EMV Data (parsed from DE55)
+message EMVData {
+  // Application Identifier
+  string aid = 1;
+  
+  // Application Label
+  string application_label = 2;
+  
+  // Cryptograms
+  EMVCryptogram cryptogram = 3;
+  
+  // Terminal Verification Results (TVR)
+  bytes tvr = 4;
+  
+  // Transaction Status Information (TSI)
+  bytes tsi = 5;
+  
+  // Application Interchange Profile (AIP)
+  bytes aip = 6;
+  
+  // Cryptogram Information Data (CID)
+  bytes cid = 7;
+  
+  // Application Transaction Counter (ATC)
+  string atc = 8;
+  
+  // Unpredictable Number
+  bytes unpredictable_number = 9;
+  
+  // Issuer Application Data (IAD)
+  bytes iad = 10;
+  
+  // Card Verification Results (CVR)
+  bytes cvr = 11;
+  
+  // Application Cryptogram
+  CryptogramType cryptogram_type = 12;
+  
+  // CVM Results
+  bytes cvm_results = 13;
+  
+  // Terminal Capabilities
+  bytes terminal_capabilities = 14;
+  
+  // Additional Terminal Capabilities
+  bytes additional_terminal_capabilities = 15;
+  
+  // Terminal Type
+  string terminal_type = 16;
+  
+  // Terminal Country Code
+  string terminal_country_code = 17;
+  
+  // Transaction Currency Code
+  string transaction_currency_code = 18;
+  
+  // Transaction Date
+  string transaction_date = 19;
+  
+  // Transaction Type
+  string transaction_type = 20;
+  
+  // Amount Authorized
+  bytes amount_authorized = 21;
+  
+  // Amount Other
+  bytes amount_other = 22;
+  
+  // Issuer Scripts
+  repeated IssuerScript issuer_scripts = 23;
+  
+  // Additional EMV tags (flexible for network-specific tags)
+  map<string, bytes> additional_tags = 30;
+  
+  // Raw EMV TLV data (for passthrough if needed)
+  bytes raw_emv_data = 31;
+}
+
+message EMVCryptogram {
+  bytes value = 1;
+  CryptogramType type = 2;
+}
+
+enum CryptogramType {
+  CRYPTOGRAM_UNKNOWN = 0;
+  CRYPTOGRAM_AAC = 1;  // Application Authentication Cryptogram (declined)
+  CRYPTOGRAM_TC = 2;   // Transaction Certificate (approved)
+  CRYPTOGRAM_ARQC = 3; // Authorization Request Cryptogram (online auth required)
+  CRYPTOGRAM_AAR = 4;  // Authorization Response (issuer response)
+}
+
+message IssuerScript {
+  bytes script = 1;
+  IssuerScriptResult result = 2;
+}
+
+message IssuerScriptResult {
+  bool success = 1;
+  bytes result_data = 2;
+}
+
+// Parsed EMV tags for easy access
+message EMVTag {
+  string tag = 1;        // Hex tag (e.g., "9F26" for cryptogram)
+  int32 length = 2;
+  bytes value = 3;
+  string description = 4;
+}
+
+// EMV Decision
+enum EMVDecision {
+  EMV_DECISION_UNKNOWN = 0;
+  EMV_DECISION_APPROVED_OFFLINE = 1;
+  EMV_DECISION_DECLINED_OFFLINE = 2;
+  EMV_DECISION_ONLINE_AUTH_REQUIRED = 3;
+}
