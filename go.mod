@@ -1,4 +1,4 @@
-module github.com/krishnabajpai/canonical-txn-gateway
+module github.com/krish567366/OpenTX
 
 go 1.21
 
