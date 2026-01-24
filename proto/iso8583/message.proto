@@ -1,0 +1,157 @@
+syntax = "proto3";
+
+package iso8583;
+
+option go_package = "github.com/krish567366/OpenTX/pkg/proto/iso8583;iso8583";
+
+// ISO 8583 Message
+// This represents a parsed ISO 8583 message with all fields accessible
+message ISO8583Message {
+  // Message Type Indicator
+  string mti = 1;
+  
+  // Bitmap (hex representation)
+  string primary_bitmap = 2;
+  string secondary_bitmap = 3;
+  
+  // Data elements (field number -> value)
+  map<int32, DataElement> data_elements = 4;
+  
+  // Variant identifier (VISA, MC, NPCI, etc.)
+  string variant = 5;
+  
+  // Raw message bytes (for debugging/logging)
+  bytes raw_message = 6;
+  
+  // Message metadata
+  MessageMetadata metadata = 7;
+}
+
+// Data Element
+message DataElement {
+  int32 field_number = 1;
+  string name = 2;
+  DataType type = 3;
+  
+  oneof value {
+    string string_value = 4;
+    bytes binary_value = 5;
+    int64 numeric_value = 6;
+  }
+  
+  // Length (for variable length fields)
+  int32 length = 7;
+  
+  // Encoding
+  Encoding encoding = 8;
+}
+
+enum DataType {
+  DATA_TYPE_UNKNOWN = 0;
+  DATA_TYPE_NUMERIC = 1;
+  DATA_TYPE_ALPHA = 2;
+  DATA_TYPE_ALPHANUMERIC = 3;
+  DATA_TYPE_BINARY = 4;
+  DATA_TYPE_TRACK = 5;
+  DATA_TYPE_AMOUNT = 6;
+  DATA_TYPE_DATE = 7;
+  DATA_TYPE_TIME = 8;
+  DATA_TYPE_TLV = 9;
+}
+
+enum Encoding {
+  ENCODING_UNKNOWN = 0;
+  ENCODING_ASCII = 1;
+  ENCODING_BCD = 2;
+  ENCODING_BINARY = 3;
+  ENCODING_EBCDIC = 4;
+}
+
+// Message Metadata
+message MessageMetadata {
+  string source = 1;
+  string destination = 2;
+  int64 timestamp_ms = 3;
+  string session_id = 4;
+}
+
+// Field Specification (for configuration)
+message FieldSpec {
+  int32 field_number = 1;
+  string name = 2;
+  DataType type = 3;
+  LengthType length_type = 4;
+  int32 max_length = 5;
+  Encoding encoding = 6;
+  PaddingType padding = 7;
+  bool mandatory = 8;
+  string description = 9;
+  
+  // For composite fields (e.g., DE48, DE55)
+  repeated SubfieldSpec subfields = 10;
+}
+
+enum LengthType {
+  LENGTH_FIXED = 0;
+  LENGTH_LLVAR = 1;   // 2-digit length prefix
+  LENGTH_LLLVAR = 2;  // 3-digit length prefix
+  LENGTH_LLLLVAR = 3; // 4-digit length prefix
+  LENGTH_BITMAP = 4;  // Bitmap-based (for DE1)
+}
+
+enum PaddingType {
+  PADDING_NONE = 0;
+  PADDING_LEFT_ZERO = 1;
+  PADDING_RIGHT_SPACE = 2;
+}
+
+message SubfieldSpec {
+  int32 subfield_number = 1;
+  string name = 2;
+  DataType type = 3;
+  LengthType length_type = 4;
+  int32 max_length = 5;
+  Encoding encoding = 6;
+}
+
+// Variant Configuration
+message VariantConfig {
+  string name = 1;
+  string description = 2;
+  
+  // MTI configuration
+  MTIConfig mti_config = 3;
+  
+  // Field specifications
+  repeated FieldSpec field_specs = 4;
+  
+  // Bitmap configuration
+  BitmapConfig bitmap_config = 5;
+  
+  // Message header/trailer
+  HeaderConfig header = 6;
+  TrailerConfig trailer = 7;
+  
+  // Encoding defaults
+  Encoding default_encoding = 8;
+}
+
+message MTIConfig {
+  Encoding encoding = 1;
+  int32 length = 2;
+}
+
+message BitmapConfig {
+  Encoding encoding = 1;
+  bool use_secondary = 2;
+}
+
+message HeaderConfig {
+  int32 length = 1;
+  bytes fixed_value = 2;
+}
+
+message TrailerConfig {
+  int32 length = 1;
+  bytes fixed_value = 2;
+}
