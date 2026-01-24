@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package events;
+
+option go_package = "github.com/krish567366/OpenTX/pkg/proto/events;events";
+
+import "google/protobuf/timestamp.proto";
+import "canonical/transaction.proto";
+import "canonical/common.proto";
+
+// Transaction Event
+// Normalized event emitted for every transaction state change
+message TransactionEvent {
+  // Event metadata
+  string event_id = 1;
+  string event_type = 2;
+  google.protobuf.Timestamp event_timestamp = 3;
+  string correlation_id = 4;
+  
+  // Transaction identifiers
+  TransactionIdentifiers identifiers = 5;
+  
+  // Event payload
+  oneof payload {
+    AuthorizationRequestedEvent auth_requested = 10;
+    AuthorizationApprovedEvent auth_approved = 11;
+    AuthorizationDeclinedEvent auth_declined = 12;
+    ReversalSentEvent reversal_sent = 13;
+    ReversalCompletedEvent reversal_completed = 14;
+    AdviceSentEvent advice_sent = 15;
+    SettlementPostedEvent settlement_posted = 16;
+    TransactionFailedEvent transaction_failed = 17;
+  }
+  
+  // Event context
+  EventContext context = 20;
+}
+
+// Transaction Identifiers
+message TransactionIdentifiers {
+  string message_id = 1;
+  string stan = 2;
+  string rrn = 3;
+  string auth_id = 4;
+  string idempotency_key = 5;
+  string network = 6;
+}
+
+// Authorization Requested Event
+message AuthorizationRequestedEvent {
+  canonical.Money amount = 1;
+  string currency_code = 2;
+  string merchant_id = 3;
+  string merchant_name = 4;
+  string terminal_id = 5;
+  string card_last4 = 6;
+  canonical.CardBrand card_brand = 7;
+  canonical.POSEntryMode entry_mode = 8;
+  canonical.TransactionType transaction_type = 9;
+  google.protobuf.Timestamp transaction_datetime = 10;
+  map<string, string> metadata = 11;
+}
+
+// Authorization Approved Event
+message AuthorizationApprovedEvent {
+  canonical.Money approved_amount = 1;
+  string auth_id = 2;
+  string response_code = 3;
+  google.protobuf.Timestamp approval_datetime = 4;
+  
+  // Balance information (if available)
+  repeated canonical.BalanceInfo balances = 5;
+  
+  map<string, string> metadata = 10;
+}
+
+// Authorization Declined Event
+message AuthorizationDeclinedEvent {
+  string response_code = 1;
+  string decline_reason = 2;
+  google.protobuf.Timestamp decline_datetime = 3;
+  map<string, string> metadata = 10;
+}
+
+// Reversal Sent Event
+message ReversalSentEvent {
+  canonical.ReversalReason reason = 1;
+  canonical.Money reversal_amount = 2;
+  string original_stan = 3;
+  string original_rrn = 4;
+  google.protobuf.Timestamp reversal_datetime = 5;
+  map<string, string> metadata = 10;
+}
+
+// Reversal Completed Event
+message ReversalCompletedEvent {
+  string response_code = 1;
+  bool success = 2;
+  google.protobuf.Timestamp completion_datetime = 3;
+  map<string, string> metadata = 10;
+}
+
+// Advice Sent Event
+message AdviceSentEvent {
+  canonical.AdviceReason reason = 1;
+  canonical.Money amount = 2;
+  google.protobuf.Timestamp advice_datetime = 3;
+  map<string, string> metadata = 10;
+}
+
+// Settlement Posted Event
+message SettlementPostedEvent {
+  string batch_number = 1;
+  canonical.Money settlement_amount = 2;
+  google.protobuf.Timestamp settlement_date = 3;
+  map<string, string> metadata = 10;
+}
+
+// Transaction Failed Event
+message TransactionFailedEvent {
+  string error_code = 1;
+  string error_message = 2;
+  FailureReason reason = 3;
+  google.protobuf.Timestamp failure_datetime = 4;
+  map<string, string> metadata = 10;
+}
+
+enum FailureReason {
+  FAILURE_UNKNOWN = 0;
+  FAILURE_TIMEOUT = 1;
+  FAILURE_CONNECTION_ERROR = 2;
+  FAILURE_PARSE_ERROR = 3;
+  FAILURE_VALIDATION_ERROR = 4;
+  FAILURE_NETWORK_ERROR = 5;
+  FAILURE_SECURITY_ERROR = 6;
+  FAILURE_CONFIGURATION_ERROR = 7;
+}
+
+// Event Context
+message EventContext {
+  string source_service = 1;
+  string source_host = 2;
+  string environment = 3;
+  string region = 4;
+  
+  // Tracing context
+  string trace_id = 5;
+  string span_id = 6;
+  string parent_span_id = 7;
+  
+  // Additional context
+  map<string, string> labels = 10;
+}
+
+// Event Stream Metadata
+message EventStreamMetadata {
+  string stream_id = 1;
+  string partition_key = 2;
+  int64 offset = 3;
+  google.protobuf.Timestamp produced_at = 4;
+}
