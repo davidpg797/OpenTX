@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package canonical;
+
+option go_package = "github.com/krish567366/OpenTX/pkg/proto/canonical;canonical";
+
+// Money representation with strong typing
+message Money {
+  // Amount in smallest currency unit (e.g., cents for USD, paise for INR)
+  int64 amount = 1;
+  
+  // ISO 4217 currency code (e.g., "USD", "INR", "EUR")
+  string currency_code = 2;
+  
+  // Number of decimal places (e.g., 2 for USD, 2 for INR, 0 for JPY)
+  int32 decimal_places = 3;
+  
+  // Sign (for credit/debit indication)
+  Sign sign = 4;
+}
+
+enum Sign {
+  SIGN_UNKNOWN = 0;
+  SIGN_POSITIVE = 1;  // Debit
+  SIGN_NEGATIVE = 2;  // Credit
+}
+
+// Date/Time helpers for ISO 8583 formats
+message ISO8583Date {
+  // MMDD format
+  string date = 1;
+}
+
+message ISO8583Time {
+  // HHmmss format
+  string time = 1;
+}
+
+message ISO8583DateTime {
+  // MMDDHHmmss or YYMMDDHHmmss format
+  string datetime = 1;
+}
+
+// Currency conversion data
+message CurrencyConversion {
+  string from_currency = 1;
+  string to_currency = 2;
+  string exchange_rate = 3;  // Stored as string to preserve precision
+  google.protobuf.Timestamp rate_timestamp = 4;
+}
