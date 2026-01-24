@@ -1,0 +1,536 @@
+syntax = "proto3";
+
+package canonical;
+
+option go_package = "github.com/krish567366/OpenTX/pkg/proto/canonical;canonical";
+
+import "google/protobuf/timestamp.proto";
+import "canonical/common.proto";
+import "canonical/emv.proto";
+
+// Canonical Transaction Message
+// This is the core normalized representation of any payment transaction
+message CanonicalTransaction {
+  // Schema version for forward/backward compatibility
+  string schema_version = 1;
+  
+  // Unique message identifier
+  string message_id = 2;
+  
+  // Correlation ID for distributed tracing
+  string correlation_id = 3;
+  
+  // Message metadata
+  MessageMetadata metadata = 4;
+  
+  // Transaction details
+  oneof transaction_type {
+    AuthorizationRequest auth_request = 10;
+    AuthorizationResponse auth_response = 11;
+    ReversalRequest reversal_request = 12;
+    ReversalResponse reversal_response = 13;
+    AdviceRequest advice_request = 14;
+    AdviceResponse advice_response = 15;
+    SettlementRequest settlement_request = 16;
+    SettlementResponse settlement_response = 17;
+    NetworkManagementRequest network_mgmt_request = 18;
+    NetworkManagementResponse network_mgmt_response = 19;
+  }
+  
+  // Security envelope (optional)
+  SecurityEnvelope security = 20;
+  
+  // Idempotency key
+  string idempotency_key = 21;
+  
+  // State tracking
+  TransactionState state = 22;
+  
+  // Original transaction data (for reversals/advice)
+  OriginalTransactionData original_data = 23;
+}
+
+// Message Metadata
+message MessageMetadata {
+  // Network identifier (VISA, MC, NPCI, etc.)
+  string network = 1;
+  
+  // ISO 8583 Message Type Indicator (0100, 0200, etc.)
+  string mti = 2;
+  
+  // Processing code (transaction type, account types, etc.)
+  ProcessingCode processing_code = 3;
+  
+  // Timestamps
+  google.protobuf.Timestamp transmission_datetime = 4;
+  google.protobuf.Timestamp local_transaction_datetime = 5;
+  google.protobuf.Timestamp settlement_date = 6;
+  
+  // System Trace Audit Number (STAN)
+  string stan = 7;
+  
+  // Retrieval Reference Number (RRN)
+  string rrn = 8;
+  
+  // Authorization ID Code
+  string auth_id_code = 9;
+  
+  // Network-specific fields
+  map<string, string> network_fields = 10;
+}
+
+// Processing Code breakdown
+message ProcessingCode {
+  // Full 6-digit processing code (e.g., "000000")
+  string code = 1;
+  
+  // Decoded components
+  TransactionType transaction_type = 2;
+  AccountType from_account = 3;
+  AccountType to_account = 4;
+}
+
+enum TransactionType {
+  TXN_UNKNOWN = 0;
+  TXN_PURCHASE = 1;
+  TXN_CASH_WITHDRAWAL = 2;
+  TXN_REFUND = 3;
+  TXN_CASH_ADVANCE = 4;
+  TXN_BALANCE_INQUIRY = 5;
+  TXN_PAYMENT = 6;
+  TXN_TRANSFER = 7;
+  TXN_PREAUTH = 8;
+  TXN_VOID = 9;
+}
+
+enum AccountType {
+  ACCOUNT_UNKNOWN = 0;
+  ACCOUNT_DEFAULT = 1;
+  ACCOUNT_SAVINGS = 2;
+  ACCOUNT_CHECKING = 3;
+  ACCOUNT_CREDIT = 4;
+  ACCOUNT_UNIVERSAL = 5;
+  ACCOUNT_INVESTMENT = 6;
+}
+
+// Authorization Request
+message AuthorizationRequest {
+  // Amounts
+  Money transaction_amount = 1;
+  Money settlement_amount = 2;
+  Money cardholder_billing_amount = 3;
+  Money additional_amounts = 4;
+  
+  // Card/Token data
+  CardData card = 5;
+  
+  // Terminal and merchant
+  TerminalData terminal = 6;
+  MerchantData merchant = 7;
+  
+  // POS data
+  POSData pos = 8;
+  
+  // EMV data
+  EMVData emv = 9;
+  
+  // Additional fields
+  string acquirer_id = 10;
+  string forwarding_institution_id = 11;
+  string track2_data = 12;
+  
+  // Network-specific additional data
+  map<string, bytes> additional_data = 20;
+}
+
+// Authorization Response
+message AuthorizationResponse {
+  // Response code
+  ResponseCode response = 1;
+  
+  // Authorization ID
+  string auth_id_code = 2;
+  
+  // Response amounts (may differ from request)
+  Money approved_amount = 3;
+  Money settlement_amount = 4;
+  
+  // Balance information
+  repeated BalanceInfo balances = 5;
+  
+  // Issuer data
+  IssuerData issuer = 6;
+  
+  // Additional response data
+  map<string, bytes> additional_data = 10;
+}
+
+// Reversal Request
+message ReversalRequest {
+  // Original transaction reference
+  string original_mti = 1;
+  string original_stan = 2;
+  string original_transmission_datetime = 3;
+  string original_acquirer_id = 4;
+  
+  // Reversal reason
+  ReversalReason reason = 5;
+  
+  // Partial reversal amount (if applicable)
+  Money reversal_amount = 6;
+  
+  // Card and terminal (for validation)
+  CardData card = 7;
+  TerminalData terminal = 8;
+  
+  // Network-specific data
+  map<string, bytes> additional_data = 10;
+}
+
+enum ReversalReason {
+  REVERSAL_UNKNOWN = 0;
+  REVERSAL_TIMEOUT = 1;
+  REVERSAL_CUSTOMER_CANCELLATION = 2;
+  REVERSAL_UNABLE_TO_COMPLETE = 3;
+  REVERSAL_SUSPECTED_MALFUNCTION = 4;
+  REVERSAL_PARTIAL_REVERSAL = 5;
+}
+
+// Reversal Response
+message ReversalResponse {
+  ResponseCode response = 1;
+  map<string, bytes> additional_data = 10;
+}
+
+// Advice Request
+message AdviceRequest {
+  // Original transaction data
+  string original_mti = 1;
+  string original_stan = 2;
+  string original_transmission_datetime = 3;
+  
+  // Transaction details
+  Money transaction_amount = 4;
+  CardData card = 5;
+  TerminalData terminal = 6;
+  MerchantData merchant = 7;
+  
+  // Advice reason
+  AdviceReason reason = 8;
+  
+  map<string, bytes> additional_data = 10;
+}
+
+enum AdviceReason {
+  ADVICE_UNKNOWN = 0;
+  ADVICE_TIMEOUT = 1;
+  ADVICE_APPROVED_OFFLINE = 2;
+  ADVICE_COMPLETION = 3;
+}
+
+// Advice Response
+message AdviceResponse {
+  ResponseCode response = 1;
+  map<string, bytes> additional_data = 10;
+}
+
+// Settlement Request
+message SettlementRequest {
+  // Settlement batch
+  string batch_number = 1;
+  google.protobuf.Timestamp settlement_date = 2;
+  
+  // Summary totals
+  repeated SettlementTotal totals = 3;
+  
+  // Individual transactions (if detail settlement)
+  repeated SettlementTransaction transactions = 4;
+  
+  map<string, bytes> additional_data = 10;
+}
+
+message SettlementTotal {
+  string currency_code = 1;
+  int64 transaction_count = 2;
+  Money debit_total = 3;
+  Money credit_total = 4;
+  Money net_total = 5;
+}
+
+message SettlementTransaction {
+  string stan = 1;
+  string rrn = 2;
+  google.protobuf.Timestamp transaction_datetime = 3;
+  Money amount = 4;
+  string response_code = 5;
+}
+
+// Settlement Response
+message SettlementResponse {
+  ResponseCode response = 1;
+  string batch_number = 2;
+  map<string, bytes> additional_data = 10;
+}
+
+// Network Management Request
+message NetworkManagementRequest {
+  NetworkManagementFunction function = 1;
+  google.protobuf.Timestamp datetime = 2;
+  map<string, bytes> additional_data = 10;
+}
+
+enum NetworkManagementFunction {
+  NET_MGMT_UNKNOWN = 0;
+  NET_MGMT_LOGON = 1;
+  NET_MGMT_LOGOFF = 2;
+  NET_MGMT_ECHO_TEST = 3;
+  NET_MGMT_KEY_CHANGE = 4;
+  NET_MGMT_CUTOVER = 5;
+}
+
+// Network Management Response
+message NetworkManagementResponse {
+  ResponseCode response = 1;
+  google.protobuf.Timestamp datetime = 2;
+  map<string, bytes> additional_data = 10;
+}
+
+// Card Data
+message CardData {
+  // PAN or Token
+  oneof identifier {
+    string pan = 1;
+    TokenData token = 2;
+  }
+  
+  // Card expiry (YYMM)
+  string expiry_date = 3;
+  
+  // Service code (3 digits)
+  string service_code = 4;
+  
+  // Card sequence number
+  string sequence_number = 5;
+  
+  // Cardholder name
+  string cardholder_name = 6;
+  
+  // Card brand
+  CardBrand brand = 7;
+  
+  // Card type
+  CardType type = 8;
+}
+
+message TokenData {
+  string token_value = 1;
+  string token_requestor_id = 2;
+  string token_assurance_level = 3;
+}
+
+enum CardBrand {
+  CARD_BRAND_UNKNOWN = 0;
+  CARD_BRAND_VISA = 1;
+  CARD_BRAND_MASTERCARD = 2;
+  CARD_BRAND_AMEX = 3;
+  CARD_BRAND_DISCOVER = 4;
+  CARD_BRAND_RUPAY = 5;
+  CARD_BRAND_DINERS = 6;
+  CARD_BRAND_JCB = 7;
+}
+
+enum CardType {
+  CARD_TYPE_UNKNOWN = 0;
+  CARD_TYPE_DEBIT = 1;
+  CARD_TYPE_CREDIT = 2;
+  CARD_TYPE_PREPAID = 3;
+  CARD_TYPE_CHARGE = 4;
+}
+
+// Terminal Data
+message TerminalData {
+  string terminal_id = 1;
+  string merchant_id = 2;
+  string acceptor_id = 3;
+  
+  // Terminal capabilities
+  TerminalCapabilities capabilities = 4;
+  
+  // Terminal location
+  TerminalLocation location = 5;
+  
+  // POS entry mode
+  POSEntryMode entry_mode = 6;
+  
+  // Terminal type
+  TerminalType type = 7;
+}
+
+message TerminalCapabilities {
+  bool pin_entry = 1;
+  bool contactless = 2;
+  bool emv_capable = 3;
+  bool magnetic_stripe = 4;
+  bool manual_entry = 5;
+}
+
+message TerminalLocation {
+  string country_code = 1;
+  string postal_code = 2;
+  string city = 3;
+  string state = 4;
+  string address = 5;
+}
+
+enum POSEntryMode {
+  POS_ENTRY_UNKNOWN = 0;
+  POS_ENTRY_MANUAL = 1;
+  POS_ENTRY_MAGNETIC_STRIPE = 2;
+  POS_ENTRY_CHIP = 3;
+  POS_ENTRY_CONTACTLESS = 4;
+  POS_ENTRY_ECOMMERCE = 5;
+  POS_ENTRY_FALLBACK = 6;
+  POS_ENTRY_QR = 7;
+}
+
+enum TerminalType {
+  TERMINAL_UNKNOWN = 0;
+  TERMINAL_POS = 1;
+  TERMINAL_ATM = 2;
+  TERMINAL_ECOMMERCE = 3;
+  TERMINAL_MPOS = 4;
+  TERMINAL_UNATTENDED = 5;
+}
+
+// Merchant Data
+message MerchantData {
+  string merchant_id = 1;
+  string merchant_name = 2;
+  string merchant_category_code = 3;
+  string merchant_city = 4;
+  string merchant_country = 5;
+  string merchant_postal_code = 6;
+}
+
+// POS Data
+message POSData {
+  POSConditionCode condition_code = 1;
+  bool pin_entered = 2;
+  bool cardholder_present = 3;
+  bool card_present = 4;
+  bool card_data_input_capability = 5;
+  bool cardholder_authentication_capability = 6;
+  bool card_capture_capability = 7;
+  POSEnvironment environment = 8;
+}
+
+enum POSConditionCode {
+  POS_CONDITION_UNKNOWN = 0;
+  POS_CONDITION_NORMAL = 1;
+  POS_CONDITION_CUSTOMER_NOT_PRESENT = 2;
+  POS_CONDITION_UNATTENDED = 3;
+  POS_CONDITION_MERCHANT_SUSPICIOUS = 4;
+  POS_CONDITION_CARDHOLDER_NOT_PRESENT = 5;
+  POS_CONDITION_MAIL_ORDER = 6;
+  POS_CONDITION_TELEPHONE_ORDER = 7;
+  POS_CONDITION_ECOMMERCE = 8;
+}
+
+enum POSEnvironment {
+  POS_ENV_UNKNOWN = 0;
+  POS_ENV_ON_PREMISE = 1;
+  POS_ENV_OFF_PREMISE = 2;
+  POS_ENV_ECOMMERCE = 3;
+  POS_ENV_MCOMMERCE = 4;
+}
+
+// Response Code
+message ResponseCode {
+  string code = 1;
+  string description = 2;
+  ResponseCategory category = 3;
+}
+
+enum ResponseCategory {
+  RESPONSE_UNKNOWN = 0;
+  RESPONSE_APPROVED = 1;
+  RESPONSE_DECLINED = 2;
+  RESPONSE_ERROR = 3;
+  RESPONSE_REFERRAL = 4;
+  RESPONSE_PICKUP = 5;
+}
+
+// Balance Info
+message BalanceInfo {
+  AccountType account_type = 1;
+  AmountType amount_type = 2;
+  Money amount = 3;
+  string currency_code = 4;
+}
+
+enum AmountType {
+  AMOUNT_TYPE_UNKNOWN = 0;
+  AMOUNT_TYPE_LEDGER = 1;
+  AMOUNT_TYPE_AVAILABLE = 2;
+  AMOUNT_TYPE_CREDIT_LIMIT = 3;
+}
+
+// Issuer Data
+message IssuerData {
+  string issuer_id = 1;
+  string issuer_country = 2;
+  bytes issuer_script_results = 3;
+  map<string, string> issuer_additional_data = 4;
+}
+
+// Security Envelope
+message SecurityEnvelope {
+  string key_id = 1;
+  string key_version = 2;
+  bytes encrypted_payload = 3;
+  bytes signature = 4;
+  string nonce = 5;
+  google.protobuf.Timestamp timestamp = 6;
+}
+
+// Transaction State
+message TransactionState {
+  TransactionStatus status = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+  repeated StateTransition history = 4;
+}
+
+enum TransactionStatus {
+  STATUS_UNKNOWN = 0;
+  STATUS_INIT = 1;
+  STATUS_SENT = 2;
+  STATUS_ACKED = 3;
+  STATUS_APPROVED = 4;
+  STATUS_DECLINED = 5;
+  STATUS_REVERSED = 6;
+  STATUS_SETTLED = 7;
+  STATUS_FAILED = 8;
+}
+
+message StateTransition {
+  TransactionStatus from_status = 1;
+  TransactionStatus to_status = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string reason = 4;
+}
+
+// Original Transaction Data (for reversals/advice)
+message OriginalTransactionData {
+  string original_mti = 1;
+  string original_stan = 2;
+  string original_rrn = 3;
+  string original_auth_id = 4;
+  google.protobuf.Timestamp original_transmission_datetime = 5;
+  Money original_amount = 6;
+  string original_acquirer_id = 7;
+  string original_forwarding_institution_id = 8;
+  
+  // ISO DE90 equivalent
+  bytes original_data_elements = 9;
+}
